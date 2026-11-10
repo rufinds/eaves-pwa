@@ -1,15 +1,13 @@
-import { useEffect, useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
-import { EventInfoBlock } from '@/components/detail/EventInfoBlock';
+import { useCallback, useEffect, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { DetailsTab } from '@/components/detail/DetailsTab';
 import { EventTabs } from '@/components/detail/EventTabs';
 import type { EventTab } from '@/components/detail/EventTabs';
 import { LineupTab } from '@/components/detail/LineupTab';
-import { RsvpActions } from '@/components/detail/RsvpActions';
-import { SocialProof } from '@/components/detail/SocialProof';
-import { SectionHeader } from '@/components/SectionHeader';
 import { StyledButton } from '@/components/StyledButton';
-import { CoverImage, EmptyState, Screen, Skeleton, Stack, Text } from '@/components/primitives';
+import { CoverImage, EmptyState, Screen, Skeleton, Stack } from '@/components/primitives';
 import { useAuthStore } from '@/state/useAuthStore';
+import { useEventExtrasStore } from '@/state/useEventExtrasStore';
 import { useEventSocialStore } from '@/state/useEventSocialStore';
 import { useItemStore } from '@/state/useItemStore';
 
@@ -17,21 +15,29 @@ export default function DetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [tab, setTab] = useState<EventTab>('details');
   const userId = useAuthStore((state) => state.user?.id);
-  const item = useItemStore((state) => state.current);
+  const current = useItemStore((state) => state.current);
   const isLoading = useItemStore((state) => state.isLoading);
   const error = useItemStore((state) => state.error);
   const loadItem = useItemStore((state) => state.loadItem);
-  const social = useEventSocialStore();
-  const { load: loadSocial, toggleRsvp } = social;
+  const lineup = useEventSocialStore((state) => state.lineup);
+  const loadSocial = useEventSocialStore((state) => state.load);
+  const loadExtras = useEventExtrasStore((state) => state.load);
+
+  // The item store is shared, so only show the item that belongs to this route.
+  const item = current !== null && current.id === id ? current : null;
+
+  // Reload on every focus, so going back from a similar event shows the right event again.
+  useFocusEffect(
+    useCallback(() => {
+      setTab('details');
+      void loadItem(id);
+      if (userId !== undefined) void loadSocial(id, userId);
+    }, [id, userId, loadItem, loadSocial]),
+  );
 
   useEffect(() => {
-    setTab('details');
-    void loadItem(id);
-  }, [id, loadItem]);
-
-  useEffect(() => {
-    if (userId !== undefined) void loadSocial(id, userId);
-  }, [id, userId, loadSocial]);
+    if (item !== null) void loadExtras(item);
+  }, [item, loadExtras]);
 
   if (item === null) {
     return (
@@ -53,34 +59,17 @@ export default function DetailScreen() {
     );
   }
 
-  const isPast = new Date(item.endsAt ?? item.startsAt).getTime() < Date.now();
-
   return (
     <Screen safeTop={false} padding="none">
       <CoverImage uri={item.imageUrl} fallbackLabel={item.category} />
-      <EventTabs activeTab={tab} onChange={setTab} lineupCount={social.lineup.length} />
+      <EventTabs activeTab={tab} onChange={setTab} lineupCount={lineup.length} />
       {tab === 'details' ? (
-        <>
-          <EventInfoBlock item={item} />
-          <SocialProof stats={social.stats} friendsRsvps={social.friendsRsvps} />
-          <RsvpActions
-            status={social.myRsvp?.status ?? null}
-            isSaving={social.isSaving}
-            isPast={isPast}
-            error={social.rsvpError}
-            onToggle={(status) => {
-              if (userId !== undefined) void toggleRsvp(userId, item.id, status);
-            }}
-          />
-          <Stack padding="md">
-            <SectionHeader title="About" />
-            <Text tone="muted" size="lg">
-              {item.description !== '' ? item.description : 'No description yet.'}
-            </Text>
-          </Stack>
-        </>
+        <DetailsTab
+          item={item}
+          onPressItem={(eventId) => router.push({ pathname: '/details/[id]', params: { id: eventId } })}
+        />
       ) : (
-        <LineupTab slots={social.lineup} />
+        <LineupTab slots={lineup} />
       )}
     </Screen>
   );

@@ -16,6 +16,8 @@ export interface Item {
   /** Street address (address_line_1), when known. */
   address: string | null;
   postalCode: string | null;
+  latitude: number | null;
+  longitude: number | null;
   /** null means the price is unknown, 0 means free. */
   price: number | null;
   minAge: number | null;
@@ -26,6 +28,10 @@ export interface Item {
   status: string;
   venueId: string | null;
   organizerId: string | null;
+  /** Unclaimed organizer directory profile, used when there is no organizer account. */
+  organizerDirectoryId: string | null;
+  /** Plain organizer name, used when there is no account or directory profile. */
+  organizerDisplayName: string | null;
   goingCount: number;
   interestedCount: number;
   /** Friends of the current user who go or are interested. Filled for personalised lists. */

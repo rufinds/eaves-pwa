@@ -19,57 +19,61 @@ interface ItemCardProps {
   onPress: () => void;
   /** The user's own RSVP, shown as a badge on the photo. */
   rsvpStatus?: RsvpStatus;
+  /** Fixed width for horizontal rows. Without it the card fills its container. */
+  width?: number;
 }
 
 /** Full-width event card: cover with chips on top, title, date, place and friends below. */
-export function ItemCard({ item, onPress, rsvpStatus }: ItemCardProps) {
+export function ItemCard({ item, onPress, rsvpStatus, width }: ItemCardProps) {
   const priceLabel = formatPrice(item.price);
   const place = formatPlace(item.venueName, item.city);
   const friends = item.friendsAttending;
   const showBadge = rsvpStatus !== undefined && rsvpStatus !== 'not_going';
 
   return (
-    <Card onPress={onPress} testID={`event-card-${item.id}`}>
-      <CoverImage
-        uri={item.imageUrl}
-        fallbackLabel={item.category}
-        height={layout.heroImageHeight}
-        dim
-        fade
-        overlay={isLive(item, new Date()) ? <LiveCoverIndicator /> : undefined}
-        top={
-          priceLabel !== null || showBadge ? (
+    <View style={width !== undefined && { width }}>
+      <Card onPress={onPress} testID={`event-card-${item.id}`}>
+        <CoverImage
+          uri={item.imageUrl}
+          fallbackLabel={item.category}
+          height={layout.heroImageHeight}
+          dim
+          fade
+          overlay={isLive(item, new Date()) ? <LiveCoverIndicator /> : undefined}
+          top={
+            priceLabel !== null || showBadge ? (
+              <>
+                {priceLabel !== null ? <PricePill label={priceLabel} /> : <View />}
+                {showBadge && <RsvpStatusBadge status={rsvpStatus} />}
+              </>
+            ) : undefined
+          }
+          bottom={
             <>
-              {priceLabel !== null ? <PricePill label={priceLabel} /> : <View />}
-              {showBadge && <RsvpStatusBadge status={rsvpStatus} />}
+              <Tag variant="type" size="xs" label={item.category} />
+              {item.genres.slice(0, MAX_GENRES).map((genre) => (
+                <Tag key={genre} variant="genre" size="xs" label={genre} />
+              ))}
             </>
-          ) : undefined
-        }
-        bottom={
-          <>
-            <Tag variant="type" size="xs" label={item.category} />
-            {item.genres.slice(0, MAX_GENRES).map((genre) => (
-              <Tag key={genre} variant="genre" size="xs" label={genre} />
-            ))}
-          </>
-        }
-      />
-      <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
-        <View style={styles.row}>
-          <Text style={[styles.meta, styles.grow]} numberOfLines={1}>{formatEventStart(item.startsAt)}</Text>
-          {friends.length > 0 && <FriendAvatarStack friends={friends} />}
+          }
+        />
+        <View style={styles.content}>
+          <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+          <View style={styles.row}>
+            <Text style={[styles.meta, styles.grow]} numberOfLines={1}>{formatEventStart(item.startsAt)}</Text>
+            {friends.length > 0 && <FriendAvatarStack friends={friends} />}
+          </View>
+          <View style={styles.row}>
+            <Text style={[styles.meta, styles.grow]} numberOfLines={1}>{place}</Text>
+            {friends.length > 0 && (
+              <Text style={styles.friendsText} numberOfLines={1}>
+                {formatFriendsGoing(friends[0]?.firstName ?? null, friends.length)}
+              </Text>
+            )}
+          </View>
         </View>
-        <View style={styles.row}>
-          <Text style={[styles.meta, styles.grow]} numberOfLines={1}>{place}</Text>
-          {friends.length > 0 && (
-            <Text style={styles.friendsText} numberOfLines={1}>
-              {formatFriendsGoing(friends[0]?.firstName ?? null, friends.length)}
-            </Text>
-          )}
-        </View>
-      </View>
-    </Card>
+      </Card>
+    </View>
   );
 }
 

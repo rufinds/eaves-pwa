@@ -39,8 +39,8 @@ You can open it in any browser, log in, browse upcoming events, open an event, R
 
 | Screen | Route | What it shows |
 |---|---|---|
-| **Home** | `/` | Greeting, a live *database online* badge and these sections: **Tonight** (live events are marked), **For you** (ranked on friends, follows and genres), **Coming Up**, **Friends**, **From following** and **Artists to watch** |
-| **Event detail** | `/details/[id]` | Cover, type and genre chips, start and end, location, price, age limit, ticket button, going/interested counts, friends attending, **RSVP** (going / interested) and a **Lineup** tab |
+| **Home** | `/` | Greeting and these sections: **Tonight** (live events are marked), **For you** (ranked on friends, follows and genres), **Coming Up**, **Friends** (full event cards), **From following** and **Artists to watch** |
+| **Event detail** | `/details/[id]` | Cover, type and genre chips, start and end, location, price, age limit, ticket button, going/interested counts, friends attending, **RSVP** (going / interested), a **Lineup** tab, quick actions (calendar, directions, share), venue, organizer, nearby places and similar events |
 | Login (extra) | `/login` | Email/password login through Supabase Auth |
 
 The personalised sections need an account with friends and follows. The demo account has them, so every section is filled.
@@ -49,7 +49,7 @@ The personalised sections need an account with friends and follows. The demo acc
 
 - Expo SDK 52, Expo Router 4 (static web export), React Native Web
 - TypeScript in strict mode, no type assertions (`as`) and no `any`
-- Zustand for state (`auth`, `items`, `feed`, `event social`, `health`)
+- Zustand for state (`auth`, `items`, `feed`, `event social`)
 - Supabase (hosted PostgreSQL + Auth) through `@supabase/supabase-js`
 - Design tokens and styling live in `src/theme` and in the components; screens only compose components
 
@@ -58,7 +58,6 @@ The personalised sections need an account with friends and follows. The demo acc
 ```bash
 npm install
 cp .env.example .env     # fill in the Supabase URL and anon key
-npm run icons            # regenerate PWA icons from assets/icon-source.png (optional)
 npm run web              # dev server
 npm run typecheck        # tsc --noEmit
 npm run build:web        # static export to ./dist
@@ -85,7 +84,6 @@ To check it: open the deployed URL in Chrome → DevTools → *Application* → 
 
 The app reads from a hosted Supabase (PostgreSQL) project, the Eaves **preview** database.
 
-- **Is it up?** The home screen runs a minimal `HEAD` query against `events` on load and shows a green *Database online* or red *Database offline* badge (`src/services/healthService.ts`).
 - **Security:** access is controlled by Row Level Security. The browser only uses the public anon key. Without an account only public events are readable; with an account RLS also decides which friends, follows and RSVPs are visible, and a user can only create, change or delete their own RSVP.
 - **For you ranking:** `src/services/feedService.ts` scores events like the Eaves API does (friends' RSVPs, followed venues and organizers, genre overlap, popularity).
 - **Typing without casts:** rows are validated at runtime with small type guards (`src/utils/guards.ts`) and mapped to the `Item` type in `src/services/itemMapper.ts`.
@@ -105,10 +103,10 @@ public/                   manifest, service worker, icons, _redirects
 src/
   components/             ItemCard, CompactItemCard, TonightCard, EventRow, ArtistCard, ...
     home/                 HomeHeader, TonightSection, ForYouSection, ComingUpSection, FriendsSection, FollowingSection, ArtistsSection
-    detail/               EventInfoBlock, EventTabs, SocialProof, RsvpActions, LineupTab, LineupSlotCard
+    detail/               EventInfoBlock, EventTabs, SocialProof, RsvpActions, LineupTab, LineupSlotCard, VenueCard, OrganizerSection, NearbyPlaces, SimilarEvents
     primitives/           Text, Stack, Row, Card, Screen, Tag, CoverImage, ...
-  services/               supabase client, auth, items, feed, social, rsvp, lineup, artists, health
-  state/                  zustand stores (auth, items, feed, event social, health)
+  services/               supabase client, auth, items, feed, social, rsvp, lineup, artists
+  state/                  zustand stores (auth, items, feed, event social)
   theme/                  design tokens + shared spacing styles
   types/                  Item, Social, User
   utils/                  type guards, date / price formatting, tonight / live logic, lineup grouping

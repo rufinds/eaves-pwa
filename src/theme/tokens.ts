@@ -77,6 +77,8 @@ export const layout = {
   touchTarget: 48,
   iconButton: 44,
   heroImageHeight: 180,
+  /** Width of full event cards in horizontal rows (leaves a peek of the next card). */
+  rowCardWidth: 320,
   compactCardWidth: 170,
   compactImageHeight: 112,
   tonightThumbnail: 56,

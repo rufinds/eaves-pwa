@@ -84,7 +84,7 @@ export default function HomeScreen() {
           onRetry={retryFeed}
         />
         <ComingUpSection items={upcoming} onPressItem={openItem} />
-        <FriendsSection items={feed.friendsEvents} onPressItem={openItem} />
+        <FriendsSection items={feed.friendsEvents} rsvps={feed.myRsvps} onPressItem={openItem} />
         <FollowingSection
           entries={feed.following}
           status={feed.status.following}

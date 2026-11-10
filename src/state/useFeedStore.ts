@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { getHomeArtists } from '../services/artistService';
-import { getFollowing, getForYou } from '../services/feedService';
+import { getFollowing, getForYou, getFriendsEvents } from '../services/feedService';
 import type { FollowingItem } from '../services/feedService';
 import { getMyRsvps } from '../services/rsvpService';
 import type { Item } from '../types/Item';
 import type { ArtistItem, MyRsvp } from '../types/Social';
 
-export type FeedSection = 'forYou' | 'following' | 'artists';
+export type FeedSection = 'forYou' | 'friends' | 'following' | 'artists';
 export type SectionStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 interface FeedState {
@@ -43,10 +43,11 @@ export const useFeedStore = create<FeedState>((set) => {
     following: [],
     artists: [],
     myRsvps: {},
-    status: { forYou: 'idle', following: 'idle', artists: 'idle' },
+    status: { forYou: 'idle', friends: 'idle', following: 'idle', artists: 'idle' },
     loadFeed: async (userId) => {
       await Promise.all([
-        runSection('forYou', () => getForYou(userId), (feed) => set({ forYou: feed.forYou, friendsEvents: feed.friendsEvents })),
+        runSection('forYou', () => getForYou(userId), (forYou) => set({ forYou })),
+        runSection('friends', () => getFriendsEvents(userId), (friendsEvents) => set({ friendsEvents })),
         runSection('following', () => getFollowing(userId), (following) => set({ following })),
         runSection('artists', getHomeArtists, (artists) => set({ artists })),
         getMyRsvps(userId)

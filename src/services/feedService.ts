@@ -19,12 +19,6 @@ const SCORE_FOLLOWED = 30;
 const SCORE_PER_GENRE = 20;
 const SCORE_PER_GOING = 2;
 
-export interface ForYouFeed {
-  forYou: Item[];
-  /** Events that friends attend, most friends first. */
-  friendsEvents: Item[];
-}
-
 export interface FollowingItem {
   item: Item;
   via: FollowedEntity;
@@ -68,7 +62,7 @@ function friendsOf(eventId: string, byEvent: Map<string, string[]>, profiles: Ma
  * friends' RSVPs (+40), events of followed venues/organizers (+30),
  * overlap with followed genres (+20 each) and popularity (+2 per going).
  */
-export async function getForYou(userId: string): Promise<ForYouFeed> {
+export async function getForYou(userId: string): Promise<Item[]> {
   const [follows, ownGenres, friendIds] = await Promise.all([
     getFollows(userId),
     getUserGenres(userId),
@@ -131,12 +125,33 @@ export async function getForYou(userId: string): Promise<ForYouFeed> {
       new Date(a.item.startsAt).getTime() - new Date(b.item.startsAt).getTime(),
   );
 
-  const friendsEvents = candidates
-    .filter((item) => item.friendsAttending.length > 0)
-    .sort((a, b) => b.friendsAttending.length - a.friendsAttending.length)
-    .slice(0, FRIENDS_LIMIT);
+  return scored.slice(0, FOR_YOU_LIMIT).map((entry) => entry.item);
+}
 
-  return { forYou: scored.slice(0, FOR_YOU_LIMIT).map((entry) => entry.item), friendsEvents };
+/** Upcoming public events that friends go to or are interested in, soonest first. */
+export async function getFriendsEvents(userId: string): Promise<Item[]> {
+  const friendIds = await getFriendIds(userId);
+  const friendRsvps = await getFriendRsvpsByEvent(friendIds);
+  if (friendRsvps.size === 0) return [];
+
+  const [{ data, error }, profiles] = await Promise.all([
+    supabase
+      .from('events')
+      .select(EVENT_COLUMNS)
+      .in('id', [...friendRsvps.keys()])
+      .eq('is_private', false)
+      .eq('status', 'scheduled')
+      .gt('end_datetime', new Date().toISOString())
+      .order('start_datetime', { ascending: true })
+      .limit(FRIENDS_LIMIT),
+    getProfiles(friendIds),
+  ]);
+  if (error !== null) throw new Error(error.message);
+
+  return toRecords(data).flatMap((row) => {
+    const item = toItem(row);
+    return item === null ? [] : [{ ...item, friendsAttending: friendsOf(item.id, friendRsvps, profiles) }];
+  });
 }
 
 /** Upcoming events of followed venues, artists (lineup) and organizers, with the reason they show up. */

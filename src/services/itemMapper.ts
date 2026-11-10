@@ -18,8 +18,10 @@ export const EVENT_COLUMNS = [
   'status',
   'venue_id',
   'organizer_id',
+  'organizer_directory_profile_id',
+  'organizer_display_name',
   'venue:venues(name)',
-  'location:locations(city,address_line_1,postal_code)',
+  'location:locations(city,address_line_1,postal_code,latitude,longitude)',
 ].join(',');
 
 /** Columns selected from the `mv_for_you_events` materialized view (flattened). */
@@ -41,6 +43,8 @@ export const VIEW_COLUMNS = [
   'venue_name',
   'city',
   'address_line_1',
+  'latitude',
+  'longitude',
   'going_count',
   'interested_count',
 ].join(',');
@@ -74,6 +78,8 @@ function readCommon(row: Record<string, unknown>, required: RequiredFields) {
     status: readString(row, 'status') ?? 'scheduled',
     venueId: readString(row, 'venue_id'),
     organizerId: readString(row, 'organizer_id'),
+    organizerDirectoryId: readString(row, 'organizer_directory_profile_id'),
+    organizerDisplayName: readString(row, 'organizer_display_name'),
     friendsAttending: [],
   };
 }
@@ -93,6 +99,8 @@ export function toItem(row: unknown): Item | null {
     city: location === null ? null : readString(location, 'city'),
     address: location === null ? null : readString(location, 'address_line_1'),
     postalCode: location === null ? null : readString(location, 'postal_code'),
+    latitude: location === null ? null : readNumber(location, 'latitude'),
+    longitude: location === null ? null : readNumber(location, 'longitude'),
     goingCount: 0,
     interestedCount: 0,
   };
@@ -110,6 +118,8 @@ export function toItemFromView(row: unknown): Item | null {
     city: readString(row, 'city'),
     address: readString(row, 'address_line_1'),
     postalCode: null,
+    latitude: readNumber(row, 'latitude'),
+    longitude: readNumber(row, 'longitude'),
     goingCount: readNumber(row, 'going_count') ?? 0,
     interestedCount: readNumber(row, 'interested_count') ?? 0,
   };
