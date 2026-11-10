@@ -6,8 +6,8 @@
 
 | | |
 |---|---|
-| **Public link** | https://TODO-add-your-deployed-url (e.g. `https://pwa.eaves.be`) |
-| **Repository** | https://github.com/TODO-user/eaves-pwa |
+| **Public link** | https://eaves-pwa.pages.dev |
+| **Repository** | https://github.com/rufinds/eaves-pwa |
 | **Demo login** | email: `demo.jules@eaves-preview.local` · password: `EavesDemo2026!` |
 | **Course** | Mobile Applications — PWA assignment |
 

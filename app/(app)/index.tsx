@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from 'react';
 import { router } from 'expo-router';
-import { DatabaseStatus } from '@/components/DatabaseStatus';
 import { ArtistsSection } from '@/components/home/ArtistsSection';
 import { ComingUpSection } from '@/components/home/ComingUpSection';
 import { FollowingSection } from '@/components/home/FollowingSection';
@@ -60,7 +59,6 @@ export default function HomeScreen() {
       <Stack gap="lg">
         <Stack gap="sm">
           <HomeHeader greeting={greeting} subGreeting={subGreeting} onLogout={() => void logout()} />
-          <DatabaseStatus isOnline={isDatabaseOnline} />
         </Stack>
 
         {isLoading && items.length === 0 && <HomeSkeleton />}
